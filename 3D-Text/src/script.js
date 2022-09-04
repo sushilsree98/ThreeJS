@@ -8,8 +8,12 @@ import { TextGeometry } from 'three/examples/jsm/geometries/TextGeometry';
 /**
  * Base
  */
+const main = {
+    init : 'Hello Three.js'
+}
 // Debug
 const gui = new dat.GUI()
+
 
 // Canvas
 const canvas = document.querySelector('canvas.webgl')
@@ -26,38 +30,13 @@ const axesHelper = new THREE.AxesHelper();
  */
 const textureLoader = new THREE.TextureLoader()
 const matcapTexture = textureLoader.load('textures/matcaps/8.png')
-console.log(matcapTexture)
 
 /**
  * Font 
  */
-const fontLoader = new FontLoader()
-fontLoader.load(
-    "fonts/helvetiker_regular.typeface.json",
-    (font) =>{
-        const textGeometry = new TextGeometry(
-            'Hello Three.js',
-            {
-                font: font,
-                size: 0.5,
-                height: 0.2,
-                curveSegments: 5,
-                bevelEnabled: true,
-                bevelThickness: 0.03,
-                bevelSize: 0.02,
-                bevelOffset:0,
-                bevelSegments: 4
-            }
-        );
-        const material = new THREE.MeshMatcapMaterial({matcap:matcapTexture})
-        // textMaterial.wireframe = true
-        const text = new THREE.Mesh(
-            textGeometry,
-            material
-        )
-        textGeometry.center()
-        scene.add(text)
-        let donutGeometry = new THREE.TorusGeometry(0.3, 0.2, 20, 45)
+let currentMesh = []
+const material = new THREE.MeshMatcapMaterial({matcap:matcapTexture})
+let donutGeometry = new THREE.TorusGeometry(0.3, 0.2, 20, 45)
         
         for(let i = 0; i < 300; i++){
             
@@ -74,9 +53,55 @@ fontLoader.load(
             donut.scale.set(scale, scale, scale)
             scene.add(donut)
         }
-    }
-)
 
+const loadText = (title, is_changed) =>{
+    const fontLoader = new FontLoader()
+    fontLoader.load(
+        "fonts/helvetiker_regular.typeface.json",
+        (font) =>{
+            const textGeometry = new TextGeometry(
+                title,
+                {
+                    font: font,
+                    size: 0.5,
+                    height: 0.2,
+                    curveSegments: 5,
+                    bevelEnabled: true,
+                    bevelThickness: 0.03,
+                    bevelSize: 0.02,
+                    bevelOffset:0,
+                    bevelSegments: 4
+                }
+            );        
+            // textMaterial.wireframe = true
+            const text = new THREE.Mesh(
+                textGeometry,
+                material
+            )
+            setCurrentMesh(text)
+            textGeometry.center()
+
+            scene.add(text)
+        }
+    )
+}
+
+const setCurrentMesh = (mesh)=>{
+    currentMesh.push(mesh)
+}
+
+loadText('Hello Three.js!')
+
+gui.add(main, 'init')
+    .name('Title')
+    .onChange(title=>{
+        if(currentMesh && currentMesh.length > 0){
+            while(currentMesh.length > 0){
+                scene.remove(currentMesh.pop())
+            }
+        }
+        loadText(title, true)
+    })
 
 
 

@@ -123,6 +123,12 @@ const tick = () =>
 {
     const elapsedTime = clock.getElapsedTime()
 
+    for(let i = 0; i < count; i++){
+        const i3 = i * 3;
+        const x = customGeometry.attributes.position.array[i3]
+        customGeometry.attributes.position.array[i3 + 1] = Math.sin(elapsedTime + x)
+    }
+    customGeometry.attributes.position.needsUpdate = true
     // Update controls
     controls.update()
 

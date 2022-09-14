@@ -1,6 +1,7 @@
 import './style.css'
 import * as THREE from 'three'
 import * as dat from 'lil-gui'
+import { BufferGeometry } from 'three'
 
 /**
  * Debug
@@ -14,6 +15,7 @@ const parameters = {
 gui
     .addColor(parameters, 'materialColor').onChange(event=>{
         material.color.set(parameters.materialColor)
+        particlesMaterial.color.set(parameters.materialColor)
     })
 
 /**
@@ -55,6 +57,33 @@ mesh3.position.y = -objectsDistance * 2;
 const sectionMeshes = [ mesh1, mesh2, mesh3 ]
 
 scene.add(mesh1, mesh2, mesh3)
+
+/**
+ * Particles
+ */
+
+const particleCount = 200;
+const particlePosition = new Float32Array(particleCount * 3)
+
+for(let i = 0; i < particleCount; i++){
+    particlePosition[i * 3 + 0] = (Math.random() - 0.5) * 10
+    particlePosition[i * 3 + 1] = objectsDistance * 0.5 - Math.random() * objectsDistance * 3
+    particlePosition[i * 3 + 2] = (Math.random() - 0.5) * 10
+}
+
+const particleGeometry = new THREE.BufferGeometry()
+particleGeometry.setAttribute('position', new THREE.BufferAttribute(particlePosition,3))
+
+// Material
+const particlesMaterial = new THREE.PointsMaterial({
+    color: parameters.materialColor,
+    sizeAttenuation: true,
+    size: 0.03
+})
+
+// Points
+const particles = new THREE.Points(particleGeometry, particlesMaterial)
+scene.add(particles)
 
 //Light
 const directionLight = new THREE.DirectionalLight('#ffffff', 1)

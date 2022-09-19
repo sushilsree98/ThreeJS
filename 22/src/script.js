@@ -7,7 +7,20 @@ import CANNON from 'cannon';
 /**
  * Debug
  */
-const gui = new dat.GUI()
+const gui = new dat.GUI();
+const debugObject = {};
+debugObject.createBall = () =>{
+    createSphere(
+        0.5, 
+        {
+            x:(Math.random() - 0.5) * 3,
+            y:3, 
+            z:(Math.random() - 0.5) * 3
+        }
+        )
+}
+
+gui.add(debugObject, 'createBall')
 
 /**
  * Base
@@ -39,16 +52,26 @@ const environmentMapTexture = cubeTextureLoader.load([
 const world = new CANNON.World()
 world.gravity.set(0, -9.82, 0)
 
-const sphereShape = new CANNON.Sphere()
-const sphereBody = new CANNON.Body({
-    mass: 1,
-    position: new CANNON.Vec3(0,3,0),
-    shape: sphereShape
-})
-world.addBody(sphereBody)
+//Material
+const plasticMaterial = new CANNON.Material('Plastic')
+const concreteMaterial = new CANNON.Material('Concrete')
+
+const concretePlasticContactMaterial = new CANNON.ContactMaterial(
+    plasticMaterial,
+    concreteMaterial,
+    {
+        friction: 0.1,
+        restitution: 0.7
+    }
+)
+
+world.addContactMaterial(concretePlasticContactMaterial)
+
+
 
 const floorShape = new CANNON.Plane();
 const floorBody = new CANNON.Body();
+floorBody.material = concreteMaterial
 floorBody.mass = 0;
 floorBody.addShape(floorShape);
 world.addBody(floorBody)
@@ -57,18 +80,41 @@ floorBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0)
 /**
  * Test sphere
  */
-const sphere = new THREE.Mesh(
-    new THREE.SphereGeometry(0.5, 32, 32),
-    new THREE.MeshStandardMaterial({
-        metalness: 0.3,
-        roughness: 0.4,
-        envMap: environmentMapTexture,
-        envMapIntensity: 0.5
+const objectsToUpdate = [];
+
+const sphereGeometry = new THREE.SphereGeometry(1, 32, 32);
+const sphereMaterial = new THREE.MeshStandardMaterial({
+            metalness: 0.3,
+            roughness: 0.4,
+            envMap: environmentMapTexture,
+            envMapIntensity: 0.5
+        })
+function createSphere(radius, position){
+    const sphere = new THREE.Mesh(sphereGeometry,sphereMaterial)
+    sphere.scale.set(radius, radius, radius)
+    sphere.castShadow = true
+    sphere.position.copy(position)
+    scene.add(sphere)
+    
+    const sphereShape = new CANNON.Sphere(radius)
+    const sphereBody = new CANNON.Body({
+        mass:1,
+        shape: sphereShape,
+        material: plasticMaterial
     })
-)
-sphere.castShadow = true
-sphere.position.y = 0.5
-scene.add(sphere)
+    sphereBody.position.copy(position)
+    world.addBody(sphereBody)
+
+    //Save in object to update
+    objectsToUpdate.push({
+        mesh : sphere,
+        body: sphereBody
+    })
+
+}
+
+createSphere(0.5, {x:0, y:3, z:0})
+console.log(objectsToUpdate)
 
 /**
  * Floor
@@ -85,7 +131,6 @@ const floor = new THREE.Mesh(
 )
 floor.receiveShadow = true
 floor.rotation.x = - Math.PI * 0.5
-floor.position.y = 1/2
 scene.add(floor)
 
 /**
@@ -164,10 +209,10 @@ const tick = () =>
 
     //Update Physics
     world.step(1/60, deltaTime, 3)
-    sphere.position.copy(sphereBody.position)
-
-    sphereBody.position.y -= 0.01;
-    sphere.position.copy(sphereBody.position)
+    
+    for(const object of objectsToUpdate){
+        object.mesh.position.copy(object.body.position)
+    }
 
 
     // Update controls

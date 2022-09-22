@@ -20,7 +20,19 @@ debugObject.createBall = () =>{
         )
 }
 
+debugObject.reset = () => {
+    console.log('reset')
+    for(let object of objectsToUpdate){
+        world.removeEventListener('collide', hitSound)
+        world.removeBody(object.body)
+
+        scene.remove(object.mesh)
+    }
+    objectsToUpdate.splice(0, objectsToUpdate.length)
+}
+
 gui.add(debugObject, 'createBall')
+gui.add(debugObject,'reset')
 
 /**
  * Base

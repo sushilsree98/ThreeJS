@@ -3,6 +3,7 @@ import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import * as dat from 'lil-gui';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
+import { DRACOLoader } from 'three/examples/jsm/loaders/DRACOLoader.js'
 
 /**
  * Base
@@ -19,13 +20,26 @@ const scene = new THREE.Scene()
 /**
  * Models
  */
+const dracoLoader = new DRACOLoader()
 const gltfLoader = new GLTFLoader()
+dracoLoader.setDecoderPath('/draco/')
+let mixer = null
 gltfLoader.load(
-    'models/FlightHelmet/glTF/FlightHelmet.gltf',
+    '/models/Fox/glTF/Fox.gltf',
     (gltf)=>{
         console.log(gltf)
+        gltf.scene.scale.set(0.025, 0.025, 0.025)
+        // while(gltf.scene.children.length){
+        //     scene.add(gltf.scene.children[0])
+        // }
+        mixer = new THREE.AnimationMixer(gltf.scene)
+        const action = mixer.clipAction(gltf.animations[2])
+        action.play()
+        scene.add(gltf.scene)
+
     }
 )
+gltfLoader.setDRACOLoader(dracoLoader)
 
 /**
  * Floor
@@ -117,6 +131,11 @@ const tick = () =>
     const elapsedTime = clock.getElapsedTime()
     const deltaTime = elapsedTime - previousTime
     previousTime = elapsedTime
+
+    //Mixer
+    if(mixer){
+        mixer.update(deltaTime)
+    }
 
     // Update controls
     controls.update()

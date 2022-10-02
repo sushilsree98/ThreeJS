@@ -30,10 +30,11 @@ const scene = new THREE.Scene()
  */
 const updateAllMaterials = () => {
     scene.traverse((child)=>{
-        console.log(child)
         if(child instanceof THREE.Mesh &&  child.material instanceof THREE.MeshStandardMaterial){
             child.material.envMap = envMap
-            child.material.envMapIntensity = debugObject.envMapIntensity/2
+            child.material.envMapIntensity = debugObject.envMapIntensity/2;
+            child.castShadow = true
+            child.receiveShadow = true
         }
     })
 }
@@ -51,6 +52,7 @@ const envMap = cubeTextureLoader.load([
 ])
 scene.background = envMap
 debugObject.envMapIntensity = 5;
+envMap.encoding = THREE.sRGBEncoding
 gui.add(debugObject,'envMapIntensity').min(0).max(10).step(0.001).onChange(updateAllMaterials)
 /**
  * Models
@@ -71,6 +73,9 @@ gltfLoader.load(
  */
 const directionalLight = new THREE.DirectionalLight('#ffffff',3)
 directionalLight.position.set(0.25, 3, -2.25)
+directionalLight.castShadow = true
+directionalLight.shadow.camera.far = 15;
+directionalLight.shadow.mapSize.set(1024, 1024)
 scene.add(directionalLight)
 gui.add(directionalLight,'intensity').min(0).max(10).step(0.01).name('lightIntensity')
 gui.add(directionalLight.position,'x').min(-5).max(5).step(0.01).name('x')
@@ -117,11 +122,17 @@ controls.enableDamping = true
  * Renderer
  */
 const renderer = new THREE.WebGLRenderer({
-    canvas: canvas
+    canvas: canvas,
+    antialias: true
 })
 renderer.setSize(sizes.width, sizes.height)
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
 renderer.physicallyCorrectLights = true
+renderer.outputEncoding = THREE.sRGBEncoding
+renderer.toneMapping = THREE.ACESFilmicToneMapping
+renderer.toneMappingExposure = 1
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap
 
 /**
  * Animate

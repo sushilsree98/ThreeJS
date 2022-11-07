@@ -6,6 +6,7 @@ import Renderer from './Renderer.js';
 import World from './World/World.js';
 import Resources from './Utils/Resources.js';
 import sources from './Utils/sources.js'
+import Debug from './Utils/Debug.js';
 
 let instance = null
 
@@ -22,7 +23,6 @@ export default class Experience
 
         //Options
         this.canvas = canvas
-        console.log(this.canvas)
 
         //Setup
         this.sizes = new Sizes()
@@ -31,7 +31,9 @@ export default class Experience
         this.camera = new Camera()
         this.renderer = new Renderer()
         this.resorces = new Resources(sources)
-        this.world = new World()
+        this.world = new World();
+        this.debug = new Debug();
+
         this.sizes.on('resize', ()=>
         {
             this.resize()
@@ -51,7 +53,14 @@ export default class Experience
 
     update()
     {
-        this.camera.update()
+        this.camera.update();
+        this.world.update();
         this.renderer.update()
+    }
+
+    destroy(){
+        this.sizes.off('resize');
+        this.time.off('tick')
+
     }
 }

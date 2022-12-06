@@ -2,7 +2,9 @@ import './style.css'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import Stats from 'stats.js'
+import * as BufferGeometryUtils from 'three/examples/jsm/utils/BufferGeometryUtils.js'
 
+console.log(BufferGeometryUtils);
 /**
  * Stats
  */
@@ -190,23 +192,29 @@ tick()
 // renderer.shadowMap.autoUpdate = false
 // renderer.shadowMap.needsUpdate = true
 
+const geometries = []
 // // Tip 18
-// for(let i = 0; i < 50; i++)
-// {
-//     const geometry = new THREE.BoxGeometry(0.5, 0.5, 0.5)
+for(let i = 0; i < 50; i++)
+{
+    const geometry = new THREE.BoxGeometry(0.5, 0.5, 0.5)
 
-//     const material = new THREE.MeshNormalMaterial()
     
-//     const mesh = new THREE.Mesh(geometry, material)
-//     mesh.position.x = (Math.random() - 0.5) * 10
-//     mesh.position.y = (Math.random() - 0.5) * 10
-//     mesh.position.z = (Math.random() - 0.5) * 10
-//     mesh.rotation.x = (Math.random() - 0.5) * Math.PI * 2
-//     mesh.rotation.y = (Math.random() - 0.5) * Math.PI * 2
+    geometry.translate(
+        (Math.random() - 0.5) * 10,
+        (Math.random() - 0.5) * 10,
+        (Math.random() - 0.5) * 10
+        )
+    geometry.rotateX((Math.random() - 0.5) * Math.PI * 2);
+    geometry.rotateY((Math.random() - 0.5) * Math.PI * 2);
+    geometries.push(geometry)
+        
+    }
+    
+const material = new THREE.MeshNormalMaterial()
+const mergedGeometry = BufferGeometryUtils.mergeBufferGeometries(geometries)
+const mesh = new THREE.Mesh(mergedGeometry, material)
 
-//     scene.add(mesh)
-// }
-
+scene.add(mesh)
 // // Tip 19
 // for(let i = 0; i < 50; i++)
 // {

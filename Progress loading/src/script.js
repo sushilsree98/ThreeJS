@@ -2,12 +2,35 @@ import './style.css'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
+import { gsap } from 'gsap'
+
+const loadingBar = document.getElementsByClassName('loading-bar')[0]
+console.log(loadingBar);
 
 /**
  * Loaders
  */
-const gltfLoader = new GLTFLoader()
-const cubeTextureLoader = new THREE.CubeTextureLoader()
+const loadingManager = new THREE.LoadingManager(
+    //Loaded
+    ()=>
+    {
+        gsap.to(overlayMaterial.uniforms.uAlpha, {duration: 3, value: 0})
+    },
+
+    //Progress
+    (itemUrl, itemLoaded, itemTotal) =>
+    {
+        const progressRatio = itemLoaded/ itemTotal;
+        loadingBar.style.transform = `scaleX(${progressRatio})`
+        if(progressRatio == 1.0){
+            loadingBar.style.transform = `scaleX(0)`
+        }
+        console.log('Loading..')
+    }
+)
+const gltfLoader = new GLTFLoader(loadingManager)
+const cubeTextureLoader = new THREE.CubeTextureLoader(loadingManager)
+
 
 /**
  * Base
@@ -20,6 +43,32 @@ const canvas = document.querySelector('canvas.webgl')
 
 // Scene
 const scene = new THREE.Scene()
+
+//Overlay
+const overlayGeometry = new THREE.PlaneGeometry(2, 2, 1, 1)
+const overlayMaterial = new THREE.ShaderMaterial({
+    transparent: true,
+    uniforms: {
+        uAlpha: {value: 1.0}
+    },
+    vertexShader:
+    `
+        void main()
+        {
+            gl_Position = vec4(position, 1.0);
+        }
+    `,
+    fragmentShader:
+    `
+        uniform float uAlpha;
+        void main()
+        {
+            gl_FragColor = vec4(0.0, 0.0, 0.0, uAlpha);
+        }
+    `
+})
+const overlay = new THREE.Mesh(overlayGeometry, overlayMaterial);
+scene.add(overlay)
 
 /**
  * Update all materials
